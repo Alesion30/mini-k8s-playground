@@ -1,4 +1,16 @@
+# mini-k8s-playground
+
+minikubeを用いてk8sの環境を色々立ち上げてみるサンプル
+
 ## Getting Started
+
+### 必要なもの
+
+- [minikube](https://minikube.sigs.k8s.io/docs/)
+- [kubectl](https://kubernetes.io/ja/docs/reference/kubectl/)
+- [Docker](https://docs.docker.com/engine/install/) （※ minikubeのドライバーにDockerを用いる場合）
+
+### 準備
 
 minikube環境を構築します。
 
@@ -16,29 +28,56 @@ $ kubectl config current-context
 minikube
 ```
 
-nginxのpodを立ち上げます。
+複数のNodeを立ち上げたい場合は、start時にnode数を指定してください。もしくは、すでにminikubeを起動している場合は、nodeを追加するコマンドを実行してください。
 
 ```sh
-$ kubectl apply -f controllers/nginx-deployment.yaml
-$ kubectl get deployments
-NAME               READY   UP-TO-DATE   AVAILABLE   AGE
-nginx-deployment   3/3     3            3           18s
+# node数を指定して起動する
+$ minikube start --nodes 3
 
-$ kubectl get pods
-NAME                               READY   STATUS    RESTARTS   AGE
-nginx-deployment-d556bf558-85gl9   1/1     Running   0          113s
-nginx-deployment-d556bf558-hc6bc   1/1     Running   0          113s
-nginx-deployment-d556bf558-ltjcq   1/1     Running   0          113s
+# nodeを追加する
+$ minikube node add
 ```
 
-nginxのserviceを適用します。
+### sampleのクラスタを作成
+
+sampleのmanifestを用いて、nginxアプリケーションサーバーを実行するクラスタを作成します。
+
+```mermaid
+flowchart LR
+    User<-->|port forward|NodePort
+    subgraph Cluster
+    subgraph Node1
+    NodePort<-->Pod1
+    NodePort<-->Pod2
+    NodePort<-->Pod3
+    subgraph Replicaset
+    Pod1
+    Pod2
+    Pod3
+    end
+    end
+    Node2
+    NodeX
+    end
+```
 
 ```sh
-$ kubectl apply -f controllers/nginx-service.yaml
-$ kubectl get services
-NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-kubernetes      ClusterIP   xxx        <none>        443/TCP        29m
-nginx-service   NodePort    xxx   <none>        80:31435/TCP   47s
+$ kubectl apply -k sample
+$ kubectl get all -o wide
+NAME                                   READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+pod/nginx-deployment-d556bf558-4ng6j   1/1     Running   0          14s   10.244.0.4   minikube   <none>           <none>
+pod/nginx-deployment-d556bf558-jk2jn   1/1     Running   0          14s   10.244.0.3   minikube   <none>           <none>
+pod/nginx-deployment-d556bf558-trvfw   1/1     Running   0          14s   10.244.0.5   minikube   <none>           <none>
+
+NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE    SELECTOR
+service/kubernetes      ClusterIP   10.96.0.1        <none>        443/TCP        2m7s   <none>
+service/nginx-service   NodePort    10.109.127.111   <none>        80:31042/TCP   14s    app=nginx
+
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES         SELECTOR
+deployment.apps/nginx-deployment   3/3     3            3           14s   nginx        nginx:1.14.2   app=nginx
+
+NAME                                         DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES         SELECTOR
+replicaset.apps/nginx-deployment-d556bf558   3         3         3       14s   nginx        nginx:1.14.2   app=nginx,pod-template-hash=d556bf558
 ```
 
 k8sのクラスタ上のネットワークを外部にポート転送します。
@@ -52,3 +91,18 @@ Handling connection for 7080> 80
 http://localhost:7080 にアクセスできるようになる
 
 ![nginx preview](./images/nginx-preview.png)
+
+### クラスタ内のDeployment群, Service群を削除する
+
+```sh
+$ kubectl delete -k sample
+service "nginx-service" deleted
+deployment.apps "nginx-deployment" deleted
+```
+
+### minikubeの環境をストップし、削除する
+
+```sh
+$ minikube stop
+$ minikube delete
+```
