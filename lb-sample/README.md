@@ -1,4 +1,4 @@
-## 構成図
+## 構成図（Node数3の場合）
 
 ```mermaid
 flowchart LR
