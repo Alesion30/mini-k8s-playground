@@ -44,20 +44,32 @@ sampleのmanifestを用いて、nginxアプリケーションサーバーを実�
 
 ```mermaid
 flowchart LR
-    User<-->|port forward|NodePort
+    User<-->|port forward|NodePort1
+
     subgraph Cluster
+    ClusterIP-->PodA
+    ClusterIP-->PodB
+    ClusterIP-->PodC
+    ClusterIP-->PodX
+    NodePort1-->ClusterIP
+    NodePortX-->ClusterIP
+
     subgraph Node1
-    NodePort<-->Pod1
-    NodePort<-->Pod2
-    NodePort<-->Pod3
+    NodePort1
     subgraph Replicaset
-    Pod1
-    Pod2
-    Pod3
+    PodA
+    PodB
+    PodC
     end
     end
-    Node2
-    NodeX
+
+    subgraph NodeX
+    NodePortX
+    subgraph ReplicasetX
+    PodX
+    end
+    end
+
     end
 ```
 
