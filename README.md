@@ -95,12 +95,12 @@ replicaset.apps/nginx-deployment-d556bf558   3         3         3       14s   n
 k8sのクラスタ上のネットワークを外部にポート転送します。
 
 ```sh
-$ kubectl port-forward service/nginx-service 7080:80
-Forwarding from 127.0.0.1:7080 -> 80
-Handling connection for 7080> 80
+$ kubectl port-forward service/nginx-service 8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Handling connection for 8080> 80
 ```
 
-http://localhost:7080 にアクセスできるようになる
+http://localhost:8080 にアクセスできるようになる
 
 ![nginx preview](./images/nginx-preview.png)
 
