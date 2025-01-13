@@ -1,3 +1,7 @@
+# lb-sample
+
+LoadBalancerのサンプル。Nodeが単一障害点にならないように、複数のNodeにアクセスを振り分けることができるようになる。
+
 ## 構成図（Node数3の場合）
 
 ```mermaid
